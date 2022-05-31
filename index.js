@@ -22,7 +22,7 @@ const app = express();
 // CORS
 app.use(
   cors({
-    origin: "https://clogblog-backend.herokuapp.com/api/v1",
+    origin: "https://clogblog-backend.herokuapp.com",
     credentials: true,
     optionsSuccessStatus: true,
   })
