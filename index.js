@@ -10,6 +10,7 @@ const mongoSanitize = require("express-mongo-sanitize");
 const xss = require("xss-clean");
 const hpp = require("hpp");
 const multer = require("multer");
+const cors = require("cors");
 // Import FILES
 const AppError = require("./util/appError");
 const globalErrorHandler = require("./controller/errorController");
@@ -18,6 +19,8 @@ const userRouter = require("./routes/userRoutes");
 const postRouter = require("./routes/postRouter");
 // Create Express Application
 const app = express();
+// CORS
+app.use(cors({ credentials: true, optionsSuccessStatus: true }));
 // Configure .env to process.env
 dotenv.config({ path: "./.env" });
 // Connection to Database (MongoDB)
