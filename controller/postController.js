@@ -35,10 +35,8 @@ exports.getPosts = async (req, res, next) => {
       // console.log(count);
     } else {
       count = await (await Post.find({ queryObj })).length;
-      posts = await Post.find(queryObj)
-        .limit(ITEMS_PER_PAGE)
-        .skip(skip)
-        .sort("-createdAt");
+      posts = await Post.find(queryObj).limit(ITEMS_PER_PAGE).skip(skip);
+      // .sort("-createdAt");
     }
     const pageCount =
       count % ITEMS_PER_PAGE > 0
