@@ -95,8 +95,12 @@ exports.createPost = async (req, res, next) => {
   try {
     let result;
     if (req.file) {
-      result = await cloudinary.uploader.upload(req.file.path);
-      req.body.photo = result.secure_url;
+      result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "clogblog_posts",
+        eager: [{ width: 1000, height: 700, crop: "fill", gravity: "auto" }],
+      });
+
+      req.body.photo = result.eager[0].secure_url;
       req.body.cloudinary_id = result.public_id;
     }
     const newPost = new Post(req.body);
@@ -125,9 +129,15 @@ exports.updatePost = async (req, res, next) => {
             await cloudinary.uploader.destroy(post.cloudinary_id);
           }
           const fileCloudinary = await cloudinary.uploader.upload(
-            req.file.path
+            req.file.path,
+            {
+              folder: "clogblog_posts",
+              eager: [
+                { width: 1000, height: 700, crop: "fill", gravity: "auto" },
+              ],
+            }
           );
-          req.body.photo = fileCloudinary.secure_url;
+          req.body.photo = fileCloudinary.eager[0].secure_url;
           req.body.cloudinary_id = fileCloudinary.public_id;
         }
         const newPost = await Post.findByIdAndUpdate(req.params.id, req.body, {

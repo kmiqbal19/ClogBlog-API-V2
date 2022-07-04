@@ -79,8 +79,18 @@ exports.updateMe = async (req, res, next) => {
       if (filteredData.cloudinary_id) {
         await cloudinary.uploader.destroy(filteredData.cloudinary_id);
       }
-      const uploadedImg = await cloudinary.uploader.upload(req.file.path);
-      filteredData.photo = uploadedImg.secure_url;
+      const uploadedImg = await cloudinary.uploader.upload(req.file.path, {
+        folder: "clogblog_users",
+        eager: [
+          {
+            width: 500,
+            height: 500,
+            crop: "fill",
+            gravity: "auto",
+          },
+        ],
+      });
+      filteredData.photo = uploadedImg.eager[0].secure_url;
       filteredData.cloudinary_id = uploadedImg.public_id;
     }
 
