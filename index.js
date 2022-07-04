@@ -76,46 +76,6 @@ if (process.env.NODE_ENV === "development") {
 //   console.log(req.headers);
 // });
 
-// USING MULTER FOR IMAGE UPLOAD
-
-const storagePosts = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/images/posts");
-  },
-  filename: (req, file, cb) => {
-    cb(null, req.body.name);
-  },
-});
-const storageUsers = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "public/images/users");
-  },
-  filename: (req, file, cb) => {
-    cb(null, req.body.name);
-  },
-});
-const multerFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image")) {
-    cb(null, true);
-  } else {
-    cb(new AppError("Only Images can be uploaded!", 400), false);
-  }
-};
-const uploadPost = multer({
-  storage: storagePosts,
-  fileFilter: multerFilter,
-});
-const uploadUser = multer({
-  storage: storageUsers,
-  fileFilter: multerFilter,
-});
-
-app.post("/api/v1/posts/upload", uploadPost.single("file"), (req, res) => {
-  res.status(200).json("File has been uploaded");
-});
-app.post("/api/v1/users/upload", uploadUser.single("file"), (req, res) => {
-  res.status(200).json("File has been uploaded");
-});
 // Serving STATIC Files
 app.use(express.static(path.join(__dirname, "public/images")));
 // MOUNTING ROUTER for different routes

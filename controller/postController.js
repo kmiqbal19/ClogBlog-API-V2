@@ -1,6 +1,7 @@
 const Post = require("../model/postModel");
 const AppError = require("../util/appError");
-
+const cloudinary = require("../util/cloudinary.js");
+const multer = require("multer");
 // GET ALL POSTS
 exports.getPosts = async (req, res, next) => {
   const ITEMS_PER_PAGE = 8;
@@ -76,8 +77,28 @@ exports.getSinglePost = async (req, res, next) => {
   }
 };
 // CREATE NEW POST
+// Create multer for adding image to tasks
+const multerStorage = multer.diskStorage({});
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("Please upload only images!", 400), false);
+  }
+};
+const upload = multer({
+  storage: multerStorage,
+  fileFilter: multerFilter,
+});
+exports.uploadPostImage = upload.single("photo");
 exports.createPost = async (req, res, next) => {
   try {
+    let result;
+    if (req.file) {
+      result = await cloudinary.uploader.upload(req.file.path);
+      req.body.photo = result.secure_url;
+      req.body.cloudinary_id = result.public_id;
+    }
     const newPost = new Post(req.body);
     const savedPost = await newPost.save();
     res.status(200).json({
@@ -96,8 +117,19 @@ exports.updatePost = async (req, res, next) => {
     const post = await Post.findById(req.params.id);
 
     if (!post) return next(new AppError("No post found!", 404));
+    console.log(req.body);
     if (post.username === req.body.username) {
       try {
+        if (req.file) {
+          if (post.cloudinary_id) {
+            await cloudinary.uploader.destroy(post.cloudinary_id);
+          }
+          const fileCloudinary = await cloudinary.uploader.upload(
+            req.file.path
+          );
+          req.body.photo = fileCloudinary.secure_url;
+          req.body.cloudinary_id = fileCloudinary.public_id;
+        }
         const newPost = await Post.findByIdAndUpdate(req.params.id, req.body, {
           new: true,
           runValidators: true,
@@ -127,6 +159,9 @@ exports.deletePost = async (req, res, next) => {
     const post = await Post.findById(req.params.id);
     if (req.body.username === post.username) {
       try {
+        if (post.cloudinary_id) {
+          await cloudinary.uploader.destroy(post.cloudinary_id);
+        }
         await Post.findByIdAndDelete(req.params.id);
         res.status(200).json({
           status: "success",

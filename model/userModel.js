@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "Please confirm the correct password"],
       validate: {
-        validator: function(el) {
+        validator: function (el) {
           return el === this.password;
         },
         message: "Passwords are not equal",
@@ -46,8 +46,8 @@ const userSchema = new mongoose.Schema(
     },
     photo: {
       type: String,
-      default: "default.jpg",
     },
+    cloudinary_id: String,
     active: {
       type: Boolean,
       default: true,
@@ -59,7 +59,7 @@ const userSchema = new mongoose.Schema(
 // PRE SAVE MIDDLEWARE FROM MONGOOSE [Doesn't work on arrow functions, because the this. is undefined there]
 
 // 1)
-userSchema.pre("save", async function(next) {
+userSchema.pre("save", async function (next) {
   // Only run this func , if the password is actually modified
   if (!this.isModified("password")) return next();
   try {
@@ -73,7 +73,7 @@ userSchema.pre("save", async function(next) {
   next();
 });
 // 2)
-userSchema.pre(/^find/, function(next) {
+userSchema.pre(/^find/, function (next) {
   // 'this' points to the current query
   this.find({ active: { $ne: false } });
   next();
@@ -81,11 +81,11 @@ userSchema.pre(/^find/, function(next) {
 
 // Creating SCHEMA METHODS
 // 1)
-userSchema.methods.checkPassword = async function(givenPass, actualPass) {
+userSchema.methods.checkPassword = async function (givenPass, actualPass) {
   return await bcrypt.compare(givenPass, actualPass);
 };
 // 2)
-userSchema.methods.isPasswordChanged = function(JWTTimestamp) {
+userSchema.methods.isPasswordChanged = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
@@ -97,7 +97,7 @@ userSchema.methods.isPasswordChanged = function(JWTTimestamp) {
   return false;
 };
 // 3)
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
   const resetToken = crypto.randomBytes(32).toString("hex");
   this.passwordResetToken = crypto
     .createHash("sha256")

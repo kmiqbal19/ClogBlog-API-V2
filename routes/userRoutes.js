@@ -29,7 +29,7 @@ module.exports = router;
 // UPDATE USER DATA
 router.route("/updateMe").patch(
   // authController.protect,
-
+  usersController.updateUserImage,
   usersController.updateMe
 );
 // DELETE USER

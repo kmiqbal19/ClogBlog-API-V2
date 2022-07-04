@@ -1,6 +1,8 @@
 const User = require("../model/userModel");
 const AppError = require("../util/appError");
-
+const cloudinary = require("../util/cloudinary.js");
+const multer = require("multer");
+// Filter Objects
 const filteredObj = (obj, ...allowedItems) => {
   const newObj = {};
   Object.keys(obj).forEach((el) => {
@@ -8,7 +10,7 @@ const filteredObj = (obj, ...allowedItems) => {
   });
   return newObj;
 };
-
+// GET USERS
 exports.getUsers = async (req, res, next) => {
   try {
     const queryObj = { ...req.query };
@@ -24,6 +26,7 @@ exports.getUsers = async (req, res, next) => {
     next(err);
   }
 };
+// GET SINGLE USER
 exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
@@ -37,6 +40,18 @@ exports.getUser = async (req, res, next) => {
     next(err);
   }
 };
+// UPDATE USER DATA
+// Create multer for user image
+const multerStorage = multer.diskStorage({});
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("Only images can be uploaded", 400), false);
+  }
+};
+const upload = multer({ storage: multerStorage, fileFilter: multerFilter });
+exports.updateUserImage = upload.single("photo");
 exports.updateMe = async (req, res, next) => {
   try {
     // Create an error if there is password
@@ -50,20 +65,30 @@ exports.updateMe = async (req, res, next) => {
     }
     // Filtered out unwanted fields that are not allowed to be updated
 
-    const filteredBody = filteredObj(
+    const filteredData = filteredObj(
       req.body,
       "username",
+      "id",
       "email",
       "fullname",
-      "photo"
+      "photo",
+      "cloudinary_id"
     );
     // Update user document
+    if (req.file) {
+      if (filteredData.cloudinary_id) {
+        await cloudinary.uploader.destroy(filteredData.cloudinary_id);
+      }
+      const uploadedImg = await cloudinary.uploader.upload(req.file.path);
+      filteredData.photo = uploadedImg.secure_url;
+      filteredData.cloudinary_id = uploadedImg.public_id;
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       // req.user.id will be used when protect will be used
       // req.user.id,
       req.body.id,
-      filteredBody,
+      filteredData,
       {
         new: true,
         runValidators: true,
@@ -79,7 +104,7 @@ exports.updateMe = async (req, res, next) => {
     next(err);
   }
 };
-
+// DELETE USER
 exports.deactivateMe = async (req, res, next) => {
   try {
     // Find the user and turn the active property to false
