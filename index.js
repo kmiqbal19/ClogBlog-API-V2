@@ -43,14 +43,8 @@ mongoose
   .then(() => console.log("Connected to MongoDB..."))
   .catch((err) => console.log(err));
 // Body parser for json file
-app.use(express.json({ limit: "10kb" }));
-// Limit request rate
-// const limiter = rateLimiter({
-//   max: 1000,
-//   windowMs: 60 * 60 * 1000,
-//   message: "Too many request in this API, Please try again in one hour.",
-// });
-// app.use("/api", limiter);
+app.use(express.json({ limit: "50mb", extended: false }));
+app.use(express.urlencoded({ limit: "50mb", extended: false }));
 // Set security HTTP headers
 app.use(
   helmet({
